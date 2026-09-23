@@ -2,6 +2,7 @@ package co.wethinkcode.healthsafe;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
+import co.wethinkcode.healthsafe.mq.StaffingEventSubscriber;
 
 import java.util.List;
 
@@ -11,6 +12,9 @@ public class WardServiceApp {
 
         IngestionClient ingestionClient = new IngestionClient();
         ObjectMapper objectMapper = new ObjectMapper();
+
+        StaffingEventSubscriber subscriber = new StaffingEventSubscriber();
+        subscriber.start();
 
         Javalin app = Javalin.create().start(7031);
 
@@ -76,8 +80,21 @@ public class WardServiceApp {
                 ctx.json(new ErrorResponse("Ingestion service unavailable"));
             }
         });
+
+        app.get("/staffing-events/latest", ctx -> {
+            String event = subscriber.getLatestEvent();
+
+            if (event == null) {
+                ctx.status(404).json(new ErrorResponse("No staffing event received yet"));
+                return;
+            }
+
+            ctx.json(new StaffingEventResponse(event));
+        });
     }
 
     public record ErrorResponse(String error) {
     }
+
+    public record StaffingEventResponse(String event) {}
 }

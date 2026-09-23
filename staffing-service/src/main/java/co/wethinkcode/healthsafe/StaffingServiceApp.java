@@ -1,11 +1,13 @@
 package co.wethinkcode.healthsafe;
 
+import co.wethinkcode.healthsafe.mq.StaffingEventPublisher;
 import io.javalin.Javalin;
 
 public class StaffingServiceApp {
 
     public static void main(String[] args) {
         HospitalClient hospitalClient = new HospitalClient();
+        StaffingEventPublisher publisher = new StaffingEventPublisher();
 
         Javalin app = Javalin.create().start(7033);
 
@@ -24,6 +26,9 @@ public class StaffingServiceApp {
 
                 int alertLevel = hospitalClient.getAlertLevel();
                 int doctorsRequired = calculateDoctors(alertLevel);
+
+                String event = ward.wardId() + "," + ward.department() + "," + alertLevel + "," + doctorsRequired;
+                publisher.publish(event);
 
                 ctx.json(new StaffingResponse(
                         ward.wardId(),
