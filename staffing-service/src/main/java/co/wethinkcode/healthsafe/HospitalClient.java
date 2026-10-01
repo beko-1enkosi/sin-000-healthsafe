@@ -11,8 +11,17 @@ import java.time.Duration;
 
 public class HospitalClient {
 
-    private static final String WARD_URL = "http://localhost:7031/wards/";
-    private static final String ALERT_URL = "http://localhost:7032/alert-level";
+    private static final String WARD_URL =
+            System.getenv().getOrDefault(
+                    "WARD_SERVICE_URL",
+                    "http://localhost:7031"
+            ) + "/wards/";
+
+    private static final String ALERT_URL =
+            System.getenv().getOrDefault(
+                    "ALERT_LEVEL_SERVICE_URL",
+                    "http://localhost:7032"
+            ) + "/alert-level";
 
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
     private final ObjectMapper mapper = new ObjectMapper();

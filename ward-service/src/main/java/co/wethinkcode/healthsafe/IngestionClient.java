@@ -13,7 +13,10 @@ import java.util.List;
 public class IngestionClient {
 
     private static final String INGESTION_URL =
-            "http://localhost:7030/wards";
+            System.getenv().getOrDefault(
+                    "INGESTION_SERVICE_URL",
+                    "http://localhost:7030"
+            ) + "/wards";
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
