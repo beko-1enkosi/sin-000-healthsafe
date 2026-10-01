@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq-deployment
+  namespace: healthsafe
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: activemq
+
+  template:
+    metadata:
+      labels:
+        app: activemq
+
+    spec:
+      containers:
+        - name: activemq
+          image: apache/activemq-classic:5.18.3
+
+          ports:
+            - containerPort: 61616
+            - containerPort: 8161
+
+          readinessProbe:
+            tcpSocket:
+              port: 61616
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            tcpSocket:
+              port: 61616
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: activemq
+  namespace: healthsafe
+spec:
+  selector:
+    app: activemq
+
+  ports:
+    - name: openwire
+      port: 61616
+      targetPort: 61616
+
+    - name: console
+      port: 8161
+      targetPort: 8161
+
+  type: ClusterIP

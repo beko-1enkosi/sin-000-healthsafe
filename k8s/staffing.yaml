@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: staffing-deployment
+  namespace: healthsafe
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: staffing-service
+
+  template:
+    metadata:
+      labels:
+        app: staffing-service
+
+    spec:
+      containers:
+        - name: staffing-service
+          image: healthsafe-staffing:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 7033
+
+          env:
+            - name: WARD_SERVICE_URL
+              value: "http://ward-service:7031"
+
+            - name: ALERT_LEVEL_SERVICE_URL
+              value: "http://alert-level-service:7032"
+
+            - name: ACTIVEMQ_BROKER_URL
+              value: "tcp://activemq:61616"
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7033
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7033
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: staffing-service
+  namespace: healthsafe
+spec:
+  selector:
+    app: staffing-service
+
+  ports:
+    - port: 7033
+      targetPort: 7033
+
+  type: ClusterIP

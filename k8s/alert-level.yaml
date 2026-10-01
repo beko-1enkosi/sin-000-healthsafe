@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-level-deployment
+  namespace: healthsafe
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: alert-level-service
+
+  template:
+    metadata:
+      labels:
+        app: alert-level-service
+
+    spec:
+      containers:
+        - name: alert-level-service
+          image: healthsafe-alert-level:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 7032
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7032
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7032
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-level-service
+  namespace: healthsafe
+spec:
+  selector:
+    app: alert-level-service
+
+  ports:
+    - port: 7032
+      targetPort: 7032
+
+  type: ClusterIP
